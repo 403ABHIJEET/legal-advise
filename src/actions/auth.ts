@@ -17,15 +17,19 @@ const loginSchema = z.object({
 const DUMMY_HASH = bcrypt.hashSync("not-a-real-password", 12);
 
 export async function loginAction(_: ActionState, fd: FormData): Promise<ActionState> {
-  const parsed = loginSchema.safeParse(formObject(fd));
-  if (!parsed.success) return fail(firstError(parsed.error));
+  try {
+    const parsed = loginSchema.safeParse(formObject(fd));
+    if (!parsed.success) return fail(firstError(parsed.error));
 
-  const user = await prisma.employee.findUnique({ where: { email: parsed.data.email } });
-  const ok = await bcrypt.compare(parsed.data.password, user?.passwordHash ?? DUMMY_HASH);
-  if (!user || !ok || user.status !== "ACTIVE") return fail("Incorrect email or password.");
+    const user = await prisma.employee.findUnique({ where: { email: parsed.data.email } });
+    const ok = await bcrypt.compare(parsed.data.password, user?.passwordHash ?? DUMMY_HASH);
+    if (!user || !ok || user.status !== "ACTIVE") return fail("Incorrect email or password.");
 
-  await createSession(user.id);
-  redirect("/dashboard");
+    await createSession(user.id);
+    redirect("/dashboard");
+  } catch (error) {
+    return fail("An error occurred while logging in.");
+  }
 }
 
 export async function logoutAction() {

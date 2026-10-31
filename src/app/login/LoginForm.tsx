@@ -5,6 +5,7 @@ import { loginAction } from "@/actions/auth";
 
 export function LoginForm() {
   const [state, action, pending] = useActionState(loginAction, null);
+
   return (
     <form action={action}>
       <label className="label" htmlFor="email">Email address</label>
