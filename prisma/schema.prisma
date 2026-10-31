@@ -1,0 +1,170 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  EMPLOYEE
+  ADMIN
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum CaseStatus {
+  ACTIVE
+  PENDING
+  CLOSED
+}
+
+enum EventType {
+  HEARING
+  OFFICE
+  DEADLINE
+  REMINDER
+}
+
+enum DocCategory {
+  TEMPLATES
+  PROCEDURE
+  REFERENCE
+  FORMS
+}
+
+enum Language {
+  BOTH
+  ENGLISH
+  HINDI
+}
+
+enum CampaignStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum EnquiryStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
+model Employee {
+  id           String         @id @default(cuid())
+  name         String
+  email        String         @unique
+  passwordHash String
+  systemRole   UserRole       @default(EMPLOYEE)
+  designation  String
+  mobile       String?
+  dob          DateTime?      @db.Date
+  photoUrl     String?
+  status       EmployeeStatus @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  ledCases       Case[]          @relation("CaseLead")
+  supportedCases Case[]          @relation("CaseSupport")
+  createdEvents  CalendarEvent[]
+
+  @@map("employees")
+}
+
+model Case {
+  id         String     @id @default(cuid())
+  title      String
+  caseType   String     @default("Civil Case")
+  client     String
+  number     String
+  court      String
+  nextDate   DateTime   @db.Date
+  status     CaseStatus @default(ACTIVE)
+  notes      String?
+  leadId     String
+  lead       Employee   @relation("CaseLead", fields: [leadId], references: [id])
+  supportId  String?
+  support    Employee?  @relation("CaseSupport", fields: [supportId], references: [id], onDelete: SetNull)
+  assignedAt DateTime   @default(now())
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  events CalendarEvent[]
+
+  @@index([leadId])
+  @@index([supportId])
+  @@index([status])
+  @@map("cases")
+}
+
+model CalendarEvent {
+  id          String    @id @default(cuid())
+  date        DateTime  @db.Date
+  title       String
+  type        EventType @default(OFFICE)
+  note        String?
+  caseId      String?
+  case        Case?     @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  createdById String?
+  createdBy   Employee? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+
+  @@index([date])
+  @@index([caseId])
+  @@map("calendar_events")
+}
+
+model Document {
+  id          String      @id @default(cuid())
+  title       String
+  category    DocCategory
+  driveUrl    String?
+  tags        String      @default("")
+  description String      @default("")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("documents")
+}
+
+model Campaign {
+  id          String         @id @default(cuid())
+  title       String
+  description String
+  language    Language       @default(BOTH)
+  status      CampaignStatus @default(DRAFT)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@map("campaigns")
+}
+
+model Enquiry {
+  id        String        @id @default(cuid())
+  name      String
+  mobile    String
+  email     String?
+  areaOfLaw String
+  query     String
+  status    EnquiryStatus @default(NEW)
+  createdAt DateTime      @default(now())
+
+  @@index([createdAt])
+  @@map("enquiries")
+}
+
+/// Single-row table (id is always 1) holding the public contact details.
+model SiteSettings {
+  id        Int      @id @default(1)
+  address   String   @default("")
+  phone     String   @default("")
+  email     String   @default("")
+  mapUrl    String   @default("")
+  updatedAt DateTime @updatedAt
+
+  @@map("site_settings")
+}

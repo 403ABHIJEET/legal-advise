@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #0b1d39;
+  --color-navy-2: #132b50;
+  --color-gold: #d5b46b;
+  --color-canvas: #f3f6fb;
+  --color-ink: #18243a;
+  --color-muted: #6d7b91;
+  --color-line: #e1e7f0;
+  --color-brand-green: #16856b;
+  --color-brand-red: #b94b56;
+  --color-pnavy: #0b3154;
+  --color-pblue: #155d83;
+  --color-pgold: #c69a4c;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: Georgia, "Times New Roman", serif;
+  --shadow-card: 0 12px 32px #12284b0d;
+}
+
+@layer base {
+  html { scroll-behavior: smooth; scroll-padding-top: 5.5rem; }
+  body { @apply bg-canvas font-sans text-sm leading-snug text-ink antialiased; }
+  button { cursor: pointer; }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-lg bg-navy px-4 py-2.5 font-semibold text-white transition hover:bg-navy-2 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-gold { @apply bg-gold text-ink hover:bg-[#c9a455]; }
+  .btn-light { @apply bg-[#edf2fa] text-navy hover:bg-[#e0e9f6]; }
+  .text-btn { @apply cursor-pointer border-0 bg-transparent px-1.5 py-1 text-xs font-semibold text-[#315b91] hover:underline; }
+  .text-btn-danger { @apply text-brand-red; }
+  .pill { @apply rounded-[9px] border border-line bg-white px-3 py-2 text-ink hover:bg-canvas; }
+
+  .field {
+    @apply w-full rounded-lg border border-[#dce3ed] bg-white px-3 py-2.5 text-ink outline-none focus:border-[#8ba5c9] focus:ring-4 focus:ring-[#dce7f6];
+  }
+  .label { @apply mb-1.5 mt-3.5 block text-xs font-semibold; }
+
+  .panel { @apply rounded-[14px] border border-line bg-white p-5 shadow-card; }
+  .panel-head { @apply mb-3 flex items-start justify-between gap-3; }
+  .panel-head h3 { @apply m-0 text-[15px] font-semibold text-navy; }
+  .panel-head p { @apply m-0 mt-0.5 text-xs text-muted; }
+
+  .tag { @apply inline-block whitespace-nowrap rounded-md bg-[#eaf6f2] px-2 py-1 text-[10px] font-bold text-brand-green; }
+  .tag-amber { @apply bg-[#fff5df] text-[#946b16]; }
+  .tag-blue { @apply bg-[#eaf0fc] text-[#315b91]; }
+  .tag-grey { @apply bg-[#eef1f5] text-[#5b6a80]; }
+
+  .tbl { @apply w-full border-collapse whitespace-nowrap; }
+  .tbl th { @apply bg-[#f8fafd] p-3 text-left text-[10px] font-bold uppercase tracking-wider text-[#728099]; }
+  .tbl td { @apply border-t border-[#edf0f5] px-3 py-3.5 text-xs; }
+  .tbl td b { @apply text-navy; }
+
+  .row { @apply grid grid-cols-[1fr_auto] gap-3 border-t border-[#edf0f5] py-3.5 first:border-t-0; }
+
+  .eyebrow { @apply text-[11px] font-extrabold uppercase tracking-[1.3px] text-pgold; }
+}
