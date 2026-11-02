@@ -30,6 +30,7 @@ function Avatar({ name, url, size = 36 }: { name: string; url: string | null; si
 export function Shell({ user, nav, labels, children }: ShellProps) {
   const pathname = usePathname();
   const [menu, setMenu] = useState(false);
+  const [pendingPath, setPendingPath] = useState<string | null>(null);
 
   const isActive = (href: string) => (href === "/dashboard" ? pathname === href : pathname.startsWith(href));
   const current = nav.find((n) => isActive(n.href));
@@ -50,7 +51,21 @@ export function Shell({ user, nav, labels, children }: ShellProps) {
           <nav className="grid gap-[5px]">
             {nav.map((n) => (
               <Link
-                key={n.href} href={n.href} onClick={() => setMenu(false)}
+                key={n.href}
+                href={n.href}
+                onClick={(event) => {
+                  setMenu(false);
+                  if (
+                    event.defaultPrevented ||
+                    event.button !== 0 ||
+                    event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.altKey ||
+                    n.href === pathname
+                  ) return;
+                  setPendingPath(n.href);
+                }}
                 className={`flex items-center gap-3 rounded-[9px] px-3 py-[11px] text-left no-underline transition ${isActive(n.href) ? "bg-[#20395c] text-white shadow-[inset_3px_0_var(--color-gold)]" : "text-[#b9c7da] hover:bg-[#20395c] hover:text-white"}`}
               >
                 <span className="w-5 text-center text-base">{n.icon}</span>{n.label}
@@ -65,6 +80,14 @@ export function Shell({ user, nav, labels, children }: ShellProps) {
         </div>
       </aside>
       {menu && <button aria-label="Close menu" className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={() => setMenu(false)} />}
+
+      {pendingPath && pendingPath !== pathname && (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-white/65" role="status" aria-label="Loading page">
+          <div className="bg-white/65 grid size-16 place-items-center rounded-xl">
+            <span className="size-8 animate-spin rounded-full border-[3px] border-navy/20 border-t-gold" />
+          </div>
+        </div>
+      )}
 
       <div className="min-w-0">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line bg-white px-3 py-3 sm:px-8 md:min-h-[76px]">
