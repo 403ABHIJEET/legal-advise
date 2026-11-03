@@ -1,4 +1,5 @@
 import { Field, Hidden, SelectField, TextAreaField } from "@/components/ui/fields";
+import GenerateThumbnail from "@/components/GenerateThumbnail";
 import {
   CAMPAIGN_STATUS, CASE_STATUS, CASE_TYPES, DOC_CATEGORY, EVENT_TYPE, LANGUAGE, toOptions,
 } from "@/lib/format";
@@ -78,7 +79,7 @@ export function EmployeeForm({ e }: { e?: EmployeeFormData }) {
       <Field label="Designation" name="designation" defaultValue={e?.designation ?? "Associate Advocate"} />
       <Field label="Work email" name="email" type="email" defaultValue={e?.email} />
       <Field label="Date of birth" name="dob" type="date" defaultValue={e?.dob ?? ""} required={false} />
-      <Field label="Profile photo URL (https, optional)" name="photoUrl" type="url" defaultValue={e?.photoUrl ?? ""} required={false} />
+      <GenerateThumbnail initialImage={e?.photoUrl} />
       <SelectField label="Access level" name="systemRole" defaultValue={e?.systemRole ?? "EMPLOYEE"} options={[{ value: "EMPLOYEE", label: "Employee" }, { value: "ADMIN", label: "Administrator" }]} />
       <SelectField label="Account status" name="status" defaultValue={e?.status ?? "ACTIVE"} options={[{ value: "ACTIVE", label: "Active" }, { value: "SUSPENDED", label: "Suspended" }]} />
       <Field label={e ? "Reset password (leave blank to keep)" : "Initial password"} name="password" type="password" required={!e} hint="Minimum 8 characters." />

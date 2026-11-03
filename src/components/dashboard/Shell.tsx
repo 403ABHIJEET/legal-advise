@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
+import GenerateThumbnail from "@/components/GenerateThumbnail";
 import { FormModal } from "@/components/ui/FormModal";
 import { Field } from "@/components/ui/fields";
 import { changePasswordAction, logoutAction } from "@/actions/auth";
@@ -116,7 +117,7 @@ export function Shell({ user, nav, labels, children }: ShellProps) {
               <Field label="Designation" name="designation" defaultValue={user.designation} />
               <Field label="Email address" name="email" type="email" defaultValue={user.email} />
               <Field label="Date of birth" name="dob" type="date" defaultValue={user.dob} required={false} />
-              <Field label="Profile photo URL (https)" name="photoUrl" type="url" defaultValue={user.photoUrl ?? ""} required={false} />
+              <GenerateThumbnail initialImage={user.photoUrl} />
             </FormModal>
 
             <FormModal title={labels.changePassword} trigger={labels.changePassword} triggerClassName="pill" action={changePasswordAction} submitLabel={labels.save} cancelLabel={labels.cancel}>
