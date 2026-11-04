@@ -42,13 +42,17 @@ export function AssignForm({ c, employees }: { c: { id: string; title: string; l
   );
 }
 
-export function EventForm({ date }: { date: string }) {
+export function EventForm({ date, event }: {
+  date: string;
+  event?: { id: string; date: string; title: string; type: string; note: string | null };
+}) {
   return (
     <>
-      <Field label="Date" name="date" type="date" defaultValue={date} />
-      <Field label="Event title" name="title" maxLength={200} />
-      <SelectField label="Type" name="type" defaultValue="OFFICE" options={toOptions(EVENT_TYPE)} />
-      <TextAreaField label="Note" name="note" maxLength={1000} />
+      {event && <Hidden name="id" value={event.id} />}
+      <Field label="Date" name="date" type="date" defaultValue={event?.date ?? date} />
+      <Field label="Event title" name="title" defaultValue={event?.title} maxLength={200} />
+      <SelectField label="Type" name="type" defaultValue={event?.type ?? "OFFICE"} options={toOptions(EVENT_TYPE)} />
+      <TextAreaField label="Note" name="note" defaultValue={event?.note ?? ""} maxLength={1000} />
     </>
   );
 }

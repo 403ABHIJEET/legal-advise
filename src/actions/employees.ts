@@ -56,23 +56,19 @@ export async function saveEmployee(_: ActionState, fd: FormData): Promise<Action
   return done("Employee saved.");
 }
 
-const profileSchema = z.object(base);
+const profileSchema = z.object({
+  photoUrl: base.photoUrl,
+});
 
-/** Lets any signed-in user update their own profile (never role/status). */
+/** Signed-in users can update only their own profile photo; other fields are admin-managed. */
 export async function updateProfile(_: ActionState, fd: FormData): Promise<ActionState> {
   const user = await requireUser();
   const parsed = profileSchema.safeParse(formObject(fd));
   if (!parsed.success) return fail(firstError(parsed.error));
-  const { dob, ...rest } = parsed.data;
-  try {
-    await prisma.employee.update({
-      where: { id: user.id },
-      data: { ...rest, dob: dob ? parseDay(dob) : null, mobile: rest.mobile ?? null, photoUrl: rest.photoUrl ?? null },
-    });
-  } catch (e) {
-    if (isDuplicate(e)) return fail("Another employee already uses this email.");
-    throw e;
-  }
+  await prisma.employee.update({
+    where: { id: user.id },
+    data: { photoUrl: parsed.data.photoUrl ?? null },
+  });
   refreshDashboard();
-  return done("Profile updated.");
+  return done("Profile photo updated.");
 }

@@ -15,7 +15,7 @@ import { initials } from "@/lib/format";
 export type NavItem = { href: string; icon: string; label: string };
 
 export type ShellProps = {
-  user: { name: string; designation: string; photoUrl: string | null; email: string; mobile: string; dob: string; isAdmin: boolean };
+  user: { name: string; designation: string; photoUrl: string | null };
   nav: NavItem[];
   labels: Record<"workspace" | "confidential" | "brandSub" | "signOut" | "roleBadge" | "myProfile" | "changePassword" | "langToggle" | "save" | "cancel", string>;
   children: ReactNode;
@@ -32,6 +32,7 @@ export function Shell({ user, nav, labels, children }: ShellProps) {
   const pathname = usePathname();
   const [menu, setMenu] = useState(false);
   const [pendingPath, setPendingPath] = useState<string | null>(null);
+  const [logoutPending, setLogoutPending] = useState(false);
 
   const isActive = (href: string) => (href === "/dashboard" ? pathname === href : pathname.startsWith(href));
   const current = nav.find((n) => isActive(n.href));
@@ -82,8 +83,8 @@ export function Shell({ user, nav, labels, children }: ShellProps) {
       </aside>
       {menu && <button aria-label="Close menu" className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={() => setMenu(false)} />}
 
-      {pendingPath && pendingPath !== pathname && (
-        <div className="fixed inset-0 z-[100] grid place-items-center bg-white/65" role="status" aria-label="Loading page">
+      {((pendingPath && pendingPath !== pathname) || logoutPending) && (
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-white/65" role="status" aria-label={logoutPending ? "Logging out" : "Loading page"}>
           <div className="bg-white/65 grid size-16 place-items-center rounded-xl">
             <span className="size-8 animate-spin rounded-full border-[3px] border-navy/20 border-t-gold" />
           </div>
@@ -112,11 +113,6 @@ export function Shell({ user, nav, labels, children }: ShellProps) {
             </div>
 
             <FormModal title={labels.myProfile} trigger={labels.myProfile} triggerClassName="pill" action={updateProfile} submitLabel={labels.save} cancelLabel={labels.cancel}>
-              <Field label="Full name" name="name" defaultValue={user.name} />
-              <Field label="Mobile number" name="mobile" type="tel" defaultValue={user.mobile} required={false} />
-              <Field label="Designation" name="designation" defaultValue={user.designation} />
-              <Field label="Email address" name="email" type="email" defaultValue={user.email} />
-              <Field label="Date of birth" name="dob" type="date" defaultValue={user.dob} required={false} />
               <GenerateThumbnail initialImage={user.photoUrl} />
             </FormModal>
 
@@ -126,7 +122,12 @@ export function Shell({ user, nav, labels, children }: ShellProps) {
               <Field label="Confirm new password" name="confirmPassword" type="password" />
             </FormModal>
 
-            <form action={logoutAction}><button className="pill">↪ {labels.signOut}</button></form>
+            <form
+              action={logoutAction}
+              onSubmit={() => setLogoutPending(true)}
+            >
+              <button className="pill" disabled={logoutPending}>↪ {labels.signOut}</button>
+            </form>
           </div>
         </header>
 

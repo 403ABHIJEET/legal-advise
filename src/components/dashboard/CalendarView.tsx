@@ -1,12 +1,15 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { createEvent, deleteEventsOnDate } from "@/actions/events";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { createEvent, deleteEventsOnDate, updateEvent } from "@/actions/events";
 import { FormModal } from "@/components/ui/FormModal";
 import { EventForm } from "@/components/dashboard/forms";
 import { fmtDate, type Lang } from "@/lib/format";
 
-type Ev = { id: string; date: string; title: string; type: string; note: string | null; canDelete: boolean };
+type Ev = {
+  id: string; date: string; title: string; type: string; note: string | null;
+  canDelete: boolean; canEdit: boolean; createdBy: string | null;
+};
 
 const WEEKDAYS: Record<Lang, string[]> = {
   en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
@@ -18,13 +21,18 @@ export function CalendarView({
   events, today, lang, labels,
 }: {
   events: Ev[]; today: string; lang: Lang;
-  labels: { mark: string; unmark: string; selected: string; empty: string; save: string; cancel: string };
+  labels: {
+    mark: string; unmark: string; selected: string; empty: string; save: string;
+    cancel: string; edit: string; createdBy: string; removeConfirmTitle: string;
+    removeConfirmMessage: string; confirmRemove: string; event: string; events: string;
+  };
 }) {
   const [{ y, m }, setMonth] = useState(() => {
     const [yy, mm] = today.split("-").map(Number);
     return { y: yy, m: mm - 1 };
   });
   const [selected, setSelected] = useState(today);
+  const [confirmUnmark, setConfirmUnmark] = useState(false);
   const [pending, start] = useTransition();
   const locale = lang === "hi" ? "hi-IN" : "en-IN";
 
@@ -48,12 +56,26 @@ export function CalendarView({
   };
 
   const dayEvents = byDate.get(selected) ?? [];
+  const removableCount = dayEvents.filter((e) => e.canDelete).length;
 
   const unmark = () => {
-    const removable = dayEvents.filter((e) => e.canDelete).length;
-    if (!removable) return alert("No events that you can remove on this date.");
-    if (!confirm(`Remove ${removable} event(s) on ${selected}?`)) return;
-    start(async () => { await deleteEventsOnDate(selected); });
+    if (removableCount) setConfirmUnmark(true);
+  };
+
+  useEffect(() => {
+    if (!confirmUnmark) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !pending) setConfirmUnmark(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [confirmUnmark, pending]);
+
+  const confirmRemoval = () => {
+    start(async () => {
+      await deleteEventsOnDate(selected);
+      setConfirmUnmark(false);
+    });
   };
 
   return (
@@ -93,7 +115,7 @@ export function CalendarView({
         <div className="panel">
           <div className="panel-head">
             <div><h3>{fmtDate(selected, lang)}</h3><p>{labels.selected}</p></div>
-            <button className="text-btn" onClick={unmark} disabled={pending}>{labels.unmark}</button>
+            <button className="text-btn" onClick={unmark} disabled={pending || removableCount === 0}>{labels.unmark}</button>
           </div>
           {dayEvents.length === 0 && <p className="text-muted">{labels.empty}</p>}
           {dayEvents.map((e) => (
@@ -102,11 +124,68 @@ export function CalendarView({
               <div>
                 <strong className="text-[13px]">{e.title}</strong>
                 <p className="m-0 mt-1 text-xs text-muted">{TYPE_LABEL[e.type] ?? e.type}{e.note ? ` · ${e.note}` : ""}</p>
+                {e.createdBy && <p className="m-0 mt-1 text-xs text-muted">{labels.createdBy}: {e.createdBy}</p>}
               </div>
+              {e.canEdit && (
+                <FormModal
+                  title={labels.edit}
+                  trigger={labels.edit}
+                  triggerClassName="text-btn ml-auto"
+                  action={updateEvent}
+                  submitLabel={labels.save}
+                  cancelLabel={labels.cancel}
+                >
+                  <EventForm date={e.date} event={e} />
+                </FormModal>
+              )}
             </div>
           ))}
         </div>
       </div>
+      {confirmUnmark && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-[#07152bb3] p-5"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !pending) setConfirmUnmark(false);
+          }}
+          role="presentation"
+        >
+          <div
+            className="w-full max-w-[440px] rounded-2xl bg-white p-6 shadow-2xl"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="unmark-dialog-title"
+            aria-describedby="unmark-dialog-description"
+          >
+            <div className="mb-4 grid size-12 place-items-center rounded-full bg-[#fff0f0] text-xl text-brand-red" aria-hidden="true">!</div>
+            <h2 id="unmark-dialog-title" className="m-0 text-lg font-semibold text-navy">{labels.removeConfirmTitle}</h2>
+            <p id="unmark-dialog-description" className="mb-0 mt-2 text-sm leading-6 text-muted">
+              {labels.removeConfirmMessage}
+            </p>
+            <p className="mb-0 mt-3 rounded-lg bg-[#f5f7fa] px-3 py-2 text-sm font-medium text-navy">
+              {fmtDate(selected, lang)} · {removableCount} {removableCount === 1 ? labels.event : labels.events}
+            </p>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                type="button"
+                className="btn btn-light"
+                onClick={() => setConfirmUnmark(false)}
+                disabled={pending}
+              >
+                {labels.cancel}
+              </button>
+              <button
+                type="button"
+                className="btn bg-brand-red text-white hover:opacity-90"
+                onClick={confirmRemoval}
+                disabled={pending}
+              >
+                {pending ? "…" : labels.confirmRemove}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

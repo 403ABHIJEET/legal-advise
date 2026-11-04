@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser, isAdmin } from "@/lib/auth";
 import { getDict } from "@/lib/i18n";
-import { dateKey } from "@/lib/format";
 import { Shell, type NavItem } from "@/components/dashboard/Shell";
 
 export const metadata: Metadata = { title: "Workspace — Pranj Legal Associates", robots: { index: false, follow: false } };
@@ -31,10 +30,6 @@ export default async function DashboardLayout({ children }: { children: React.Re
           name: user.name,
           designation: user.designation,
           photoUrl: user.photoUrl,
-          email: user.email,
-          mobile: user.mobile ?? "",
-          dob: user.dob ? dateKey(user.dob) : "",
-          isAdmin: admin,
         }}
         nav={nav.filter((n) => !n.admin || admin).map(({ href, icon, label }) => ({ href, icon, label }))}
         labels={{

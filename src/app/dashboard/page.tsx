@@ -25,7 +25,12 @@ export default async function OverviewPage() {
   const [activeCases, recentCases, upcoming, upcomingCount, reminderCount, docCount, employees] = await Promise.all([
     prisma.case.count({ where: { ...caseScope(user), status: "ACTIVE" } }),
     prisma.case.findMany({ where: caseScope(user), orderBy: { nextDate: "asc" }, take: 4 }),
-    prisma.calendarEvent.findMany({ where: { ...eventScope(user), date: { gte: todayDate } }, orderBy: { date: "asc" }, take: 4 }),
+    prisma.calendarEvent.findMany({
+      where: { ...eventScope(user), date: { gte: todayDate } },
+      orderBy: { date: "asc" },
+      take: 4,
+      include: { createdBy: { select: { name: true } } },
+    }),
     prisma.calendarEvent.count({ where: { ...eventScope(user), date: { gte: todayDate } } }),
     prisma.calendarEvent.count({ where: { ...eventScope(user), date: { gte: todayDate }, type: { in: ["DEADLINE", "REMINDER"] } } }),
     prisma.document.count(),
@@ -84,6 +89,7 @@ export default async function OverviewPage() {
               <div>
                 <strong className="text-[13px]">{e.title}</strong>
                 <p className="m-0 mt-1 text-xs text-muted">{e.note ? `${e.note} · ` : ""}{EVENT_TYPE[e.type]}</p>
+                {e.createdBy && <p className="m-0 mt-1 text-xs text-muted">{t("createdBy")}: {e.createdBy.name}</p>}
               </div>
             </div>
           ))}

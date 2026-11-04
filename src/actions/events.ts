@@ -13,6 +13,8 @@ const schema = z.object({
   note: z.preprocess(emptyToUndef, z.string().max(1000).optional()),
 });
 
+const updateSchema = schema.extend({ id: z.string().min(1) });
+
 export async function createEvent(_: ActionState, fd: FormData): Promise<ActionState> {
   const user = await requireUser();
   const parsed = schema.safeParse(formObject(fd));
@@ -21,6 +23,20 @@ export async function createEvent(_: ActionState, fd: FormData): Promise<ActionS
   await prisma.calendarEvent.create({ data: { ...rest, date: parseDay(date), createdById: user.id } });
   refreshDashboard();
   return done("Date marked.");
+}
+
+export async function updateEvent(_: ActionState, fd: FormData): Promise<ActionState> {
+  const user = await requireUser();
+  const parsed = updateSchema.safeParse(formObject(fd));
+  if (!parsed.success) return fail(firstError(parsed.error));
+  const { id, date, ...rest } = parsed.data;
+  const { count } = await prisma.calendarEvent.updateMany({
+    where: { id, createdById: user.id },
+    data: { ...rest, date: parseDay(date) },
+  });
+  if (!count) return fail("You can only edit events that you created.");
+  refreshDashboard();
+  return done("Event updated.");
 }
 
 /** Removes events on a date. Employees can only remove events they created; admins can remove any. */

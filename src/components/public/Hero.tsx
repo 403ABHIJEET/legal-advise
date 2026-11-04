@@ -29,9 +29,9 @@ export function Hero() {
         </div>
       </div>
 
-      <div className="relative z-[1] min-h-[290px] self-stretch max-sm:-mt-2.5 max-sm:min-h-[230px]">
+      {/* <div className="relative z-[1] min-h-[290px] self-stretch max-sm:-mt-2.5 max-sm:min-h-[230px]">
         <Image src="/hero.png" alt="Illustration of a lawyer with legal books" fill sizes="(max-width: 768px) 90vw, 400px" className="object-contain object-[center_20%] mix-blend-multiply saturate-[.9]" priority />
-      </div>
+      </div> */}
 
       <blockquote className="z-[1] m-0 hidden border-y-2 border-pgold py-3.5 text-center font-serif text-[17px] italic leading-normal text-[#244d6d] lg:block">
         “Justice is not just a goal; it is our commitment.”
